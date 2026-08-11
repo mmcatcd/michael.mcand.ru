@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Servicing Log</title>
+    <style>
+      :root {
+        --bg: #fff;
+        --fg: #222;
+        --muted: #666;
+        --line: #e2e2e2;
+        --field: #fff;
+        --accent: #2166c4;
+        --accent-fg: #fff;
+        --chip: #f0f0f0;
+        --danger: #c0392b;
+        --ok: #1e7a45;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #16181a;
+          --fg: #e9e9e9;
+          --muted: #9a9a9a;
+          --line: #303336;
+          --field: #1e2124;
+          --accent: #5a9bf0;
+          --accent-fg: #10131a;
+          --chip: #262a2e;
+          --danger: #e2685c;
+          --ok: #61c48d;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: SF Pro Display, SF Pro Icons, Helvetica Neue, Helvetica,
+          Arial, sans-serif;
+        margin: 0 auto;
+        max-width: 600px;
+        padding: 20px 20px 60px;
+        background: var(--bg);
+        color: var(--fg);
+        -webkit-text-size-adjust: 100%;
+      }
+      a {
+        color: var(--accent);
+      }
+      h1 {
+        font-size: 32px;
+        line-height: 1.19;
+        font-weight: 600;
+        letter-spacing: 0.011em;
+        margin: 10px 0 4px;
+      }
+      h2 {
+        font-size: 19px;
+        font-weight: 600;
+        margin: 32px 0 12px;
+      }
+      p {
+        font-size: 17px;
+        line-height: 1.47;
+      }
+      .home {
+        display: inline-block;
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 15px;
+      }
+      .home:hover {
+        color: var(--fg);
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 15px;
+        margin: 0 0 20px;
+      }
+      .sub a {
+        color: inherit;
+      }
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 5px;
+      }
+      input,
+      textarea,
+      select {
+        width: 100%;
+        font: inherit;
+        font-size: 16px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--field);
+        color: var(--fg);
+      }
+      textarea {
+        min-height: 72px;
+        resize: vertical;
+      }
+      input:focus,
+      textarea:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+        border-color: var(--accent);
+      }
+      .field {
+        margin-bottom: 14px;
+      }
+      button {
+        font: inherit;
+        font-size: 16px;
+        padding: 10px 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--chip);
+        color: var(--fg);
+        cursor: pointer;
+      }
+      button:hover {
+        border-color: var(--muted);
+      }
+      button[disabled] {
+        opacity: 0.5;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--accent);
+        color: var(--accent-fg);
+        border-color: var(--accent);
+        font-weight: 600;
+      }
+      button.link {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--muted);
+        text-decoration: underline;
+        font-size: 14px;
+      }
+      button.link:hover {
+        color: var(--fg);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .status {
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 15px;
+        margin: 12px 0;
+        background: var(--chip);
+      }
+      .status.error {
+        color: var(--danger);
+        border: 1px solid var(--danger);
+        background: none;
+      }
+      .status.ok {
+        color: var(--ok);
+        border: 1px solid var(--ok);
+        background: none;
+      }
+      .vehicles {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .vehicles button {
+        padding: 7px 14px;
+        border-radius: 999px;
+        font-size: 15px;
+      }
+      .vehicles button.selected {
+        background: var(--fg);
+        color: var(--bg);
+        border-color: var(--fg);
+        font-weight: 600;
+      }
+      .suggestions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 8px 0 14px;
+      }
+      .suggestions button {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .summary {
+        color: var(--muted);
+        font-size: 14px;
+        margin: 0 0 12px;
+      }
+      .entry {
+        border-top: 1px solid var(--line);
+        padding: 12px 0;
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .entry:last-child {
+        border-bottom: 1px solid var(--line);
+      }
+      .entry .when {
+        font-weight: 600;
+        font-size: 15px;
+        white-space: nowrap;
+        min-width: 96px;
+      }
+      .entry .what {
+        flex: 1;
+        min-width: 0;
+        font-size: 15px;
+        line-height: 1.45;
+      }
+      .entry .what .headline {
+        font-weight: 600;
+      }
+      .entry .what .detail {
+        color: var(--muted);
+      }
+      .entry .what .detail span::after {
+        content: " · ";
+      }
+      .entry .what .detail span:last-child::after {
+        content: "";
+      }
+      .entry .del {
+        border: none;
+        background: none;
+        color: var(--muted);
+        font-size: 15px;
+        padding: 2px 6px;
+        line-height: 1;
+      }
+      .entry .del:hover {
+        color: var(--danger);
+      }
+      details {
+        font-size: 15px;
+        line-height: 1.5;
+        margin: 20px 0;
+        color: var(--muted);
+      }
+      details summary {
+        cursor: pointer;
+        color: var(--fg);
+        font-size: 15px;
+      }
+      details ol {
+        padding-left: 20px;
+      }
+      details li {
+        margin: 8px 0;
+      }
+      code {
+        font-family: "SF Mono", SFMono-Regular, Consolas, Menlo, monospace;
+        font-size: 0.9em;
+        background: var(--chip);
+        padding: 2px 5px;
+        border-radius: 4px;
+        word-break: break-all;
+      }
+      footer {
+        margin-top: 40px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 14px;
+      }
+      footer .row {
+        gap: 16px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="home" href="../tools.html">← Tools</a>
+    <h1>🔧 Car Servicing Log</h1>
+    <p class="sub" id="subtitle">
+      Keep a record of what was done to the car, and when — stored in your own
+      Google Sheet.
+    </p>
+
+    <div id="status" class="status" hidden></div>
+
+    <!-- Setup -->
+    <section id="setup" hidden>
+      <div class="field">
+        <label for="client-id">Google OAuth client ID</label>
+        <input
+          id="client-id"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="1234-abcd.apps.googleusercontent.com"
+        />
+      </div>
+      <div class="field">
+        <label for="sheet-id">Google Sheet (URL or ID)</label>
+        <input
+          id="sheet-id"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="https://docs.google.com/spreadsheets/d/…"
+        />
+      </div>
+      <div class="row">
+        <button id="connect" class="primary">Connect</button>
+        <button id="create-sheet">Create a sheet for me</button>
+      </div>
+
+      <details>
+        <summary>First time? Set up Google access (once, ~3 minutes)</summary>
+        <ol>
+          <li>
+            Open the
+            <a href="https://console.cloud.google.com/" target="_blank"
+              >Google Cloud console</a
+            >
+            and create a project (any name).
+          </li>
+          <li>
+            In <em>APIs &amp; Services → Library</em>, enable the
+            <strong>Google Sheets API</strong>.
+          </li>
+          <li>
+            In <em>APIs &amp; Services → OAuth consent screen</em>, pick
+            <em>External</em>, fill in the required names, and add your own
+            Google address under <em>Test users</em>.
+          </li>
+          <li>
+            In <em>Credentials → Create credentials → OAuth client ID</em>,
+            choose <strong>Web application</strong> and add
+            <code>https://michael.mcand.ru</code> as an authorised JavaScript
+            origin (add <code>http://localhost:8000</code> too if you run this
+            page locally).
+          </li>
+          <li>
+            Copy the client ID that ends in
+            <code>.apps.googleusercontent.com</code> and paste it above.
+          </li>
+        </ol>
+        <p>
+          The client ID and sheet are remembered in this browser's local
+          storage. Nothing is sent anywhere except Google — this page is static
+          and has no server. Because the app is unverified, Google shows a
+          "Google hasn't verified this app" warning the first time; continue
+          past it as the test user you added.
+        </p>
+      </details>
+    </section>
+
+    <!-- Sign in -->
+    <section id="signin" hidden>
+      <p>Signed out. Reconnect to load the log.</p>
+      <div class="row">
+        <button id="signin-button" class="primary">Sign in with Google</button>
+        <button id="signin-change" class="link">Use a different sheet</button>
+      </div>
+    </section>
+
+    <!-- Seeding a blank spreadsheet -->
+    <section id="seed" hidden>
+      <p>
+        This spreadsheet has no vehicle logs yet. Name your first vehicle and
+        it will be set up with a tab of its own.
+      </p>
+      <div class="field">
+        <label for="seed-name">Vehicle name</label>
+        <input id="seed-name" type="text" placeholder="e.g. Golf, KL19 ABC" />
+      </div>
+      <div class="row">
+        <button id="seed-button" class="primary">Set up sheet</button>
+        <button id="seed-change" class="link">Use a different sheet</button>
+      </div>
+    </section>
+
+    <!-- Main app -->
+    <main id="app" hidden>
+      <div class="vehicles" id="vehicles"></div>
+
+      <form id="entry-form" autocomplete="off">
+        <div id="fields"></div>
+        <div class="row">
+          <button type="submit" class="primary" id="save">Add entry</button>
+          <button type="button" class="link" id="add-field">
+            + Add a field
+          </button>
+        </div>
+      </form>
+
+      <h2>History</h2>
+      <p class="summary" id="summary"></p>
+      <div id="entries"></div>
+    </main>
+
+    <footer id="footer" hidden>
+      <div class="row">
+        <a id="open-sheet" href="#" target="_blank">Open in Google Sheets ↗</a>
+        <button class="link" id="change-sheet">Change sheet</button>
+        <button class="link" id="sign-out">Sign out</button>
+      </div>
+    </footer>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+      const SCOPE = "https://www.googleapis.com/auth/spreadsheets";
+      const API = "https://sheets.googleapis.com/v4/spreadsheets";
+      const KEYS = {
+        clientId: "car-service.client-id",
+        sheetId: "car-service.sheet-id",
+        vehicle: "car-service.vehicle",
+        token: "car-service.token",
+      };
+      const DEFAULT_HEADERS = [
+        "Date",
+        "Odometer",
+        "Service",
+        "Cost",
+        "Garage",
+        "Notes",
+      ];
+
+      const el = (id) => document.getElementById(id);
+      const store = {
+        get: (k) => localStorage.getItem(k) || "",
+        set: (k, v) => localStorage.setItem(k, v),
+        del: (k) => localStorage.removeItem(k),
+      };
+
+      // Everything we know about the spreadsheet we are pointed at.
+      const state = {
+        clientId: "",
+        sheetId: "",
+        title: "",
+        vehicles: [], // [{ title, sheetId, headers }]
+        current: null, // one of vehicles
+        rows: [], // [{ number, values }] straight from the sheet
+      };
+
+      let tokenClient = null;
+
+      /* ---------------------------------------------------------------- auth */
+
+      function storedToken() {
+        try {
+          const t = JSON.parse(sessionStorage.getItem(KEYS.token) || "null");
+          if (t && t.access_token && t.expires_at > Date.now() + 30000) return t;
+        } catch (e) {}
+        return null;
+      }
+
+      function waitForGoogle() {
+        return new Promise((resolve, reject) => {
+          const started = Date.now();
+          (function poll() {
+            if (window.google && google.accounts && google.accounts.oauth2)
+              return resolve();
+            if (Date.now() - started > 10000)
+              return reject(new Error("Could not load Google sign-in."));
+            setTimeout(poll, 100);
+          })();
+        });
+      }
+
+      // Google's token client is callback based, so wrap one request in a promise.
+      async function signIn() {
+        await waitForGoogle();
+        if (!tokenClient || tokenClient._clientId !== state.clientId) {
+          tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: state.clientId,
+            scope: SCOPE,
+            callback: () => {},
+          });
+          tokenClient._clientId = state.clientId;
+        }
+        return new Promise((resolve, reject) => {
+          tokenClient.callback = (response) => {
+            if (response.error)
+              return reject(
+                new Error(response.error_description || response.error)
+              );
+            sessionStorage.setItem(
+              KEYS.token,
+              JSON.stringify({
+                access_token: response.access_token,
+                expires_at: Date.now() + Number(response.expires_in) * 1000,
+              })
+            );
+            resolve(response.access_token);
+          };
+          tokenClient.error_callback = (err) =>
+            reject(
+              new Error(
+                err.type === "popup_closed"
+                  ? "Sign-in was cancelled."
+                  : err.message || "Sign-in failed."
+              )
+            );
+          tokenClient.requestAccessToken({ prompt: "" });
+        });
+      }
+
+      function signOut() {
+        const token = storedToken();
+        if (token && window.google && google.accounts)
+          google.accounts.oauth2.revoke(token.access_token, () => {});
+        sessionStorage.removeItem(KEYS.token);
+      }
+
+      /* ----------------------------------------------------------- sheets api */
+
+      async function sheets(path, options = {}) {
+        const token = storedToken();
+        if (!token) throw Object.assign(new Error("Not signed in."), { auth: true });
+        const response = await fetch(API + path, {
+          method: options.method || "GET",
+          headers: {
+            Authorization: "Bearer " + token.access_token,
+            "Content-Type": "application/json",
+          },
+          body: options.body ? JSON.stringify(options.body) : undefined,
+        });
+        if (!response.ok) {
+          const detail = await response.json().catch(() => ({}));
+          const message =
+            (detail.error && detail.error.message) || response.statusText;
+          if (response.status === 401 || response.status === 403) {
+            sessionStorage.removeItem(KEYS.token);
+            throw Object.assign(new Error(message), { auth: true });
+          }
+          throw new Error(message);
+        }
+        return response.json();
+      }
+
+      // Sheet names go inside single quotes in A1 notation; quotes are doubled.
+      const range = (sheetTitle, a1) =>
+        encodeURIComponent("'" + sheetTitle.replace(/'/g, "''") + "'!" + a1);
+
+      function columnLetter(index) {
+        let letter = "";
+        for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26))
+          letter = String.fromCharCode(65 + ((n - 1) % 26)) + letter;
+        return letter;
+      }
+
+      /* -------------------------------------------------------------- helpers */
+
+      const escapeHtml = (value) =>
+        String(value).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c])
+        );
+
+      function todayISO() {
+        const now = new Date();
+        return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+          .toISOString()
+          .slice(0, 10);
+      }
+
+      // Sheets returns unformatted dates as serial numbers (day 25569 = 1970-01-01).
+      const serialToDate = (serial) =>
+        new Date(Math.round((serial - 25569) * 86400000));
+
+      function isDateHeader(header) {
+        return /date|when/i.test(header || "");
+      }
+
+      function parseDate(value, header) {
+        if (typeof value === "number" && isDateHeader(header))
+          return serialToDate(value);
+        if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value))
+          return new Date(value.slice(0, 10) + "T00:00:00Z");
+        return null;
+      }
+
+      function formatDate(date) {
+        return date.toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          timeZone: "UTC",
+        });
+      }
+
+      function displayValue(value, header) {
+        if (value === "" || value === null || value === undefined) return "";
+        const date = parseDate(value, header);
+        if (date && !isNaN(date)) return formatDate(date);
+        if (typeof value === "number") return value.toLocaleString();
+        return String(value);
+      }
+
+      function setStatus(message, kind) {
+        const node = el("status");
+        node.textContent = message || "";
+        node.className = "status" + (kind ? " " + kind : "");
+        node.hidden = !message;
+      }
+
+      function show(section) {
+        for (const id of ["setup", "signin", "seed", "app"])
+          el(id).hidden = id !== section;
+        el("footer").hidden = section === "setup";
+      }
+
+      function handleError(error) {
+        console.error(error);
+        if (error && error.auth) {
+          setStatus(error.message || "Please sign in again.", "error");
+          show("signin");
+          return;
+        }
+        setStatus(error.message || String(error), "error");
+      }
+
+      /* ------------------------------------------------------- loading a sheet */
+
+      async function loadSpreadsheet() {
+        setStatus("Loading…");
+        const meta = await sheets(
+          "/" +
+            state.sheetId +
+            "?fields=properties.title,sheets.properties(sheetId,title)"
+        );
+        state.title = meta.properties.title;
+        el("open-sheet").href =
+          "https://docs.google.com/spreadsheets/d/" + state.sheetId + "/edit";
+
+        const tabs = meta.sheets.map((s) => s.properties);
+        const ranges = tabs
+          .map((tab) => "ranges=" + range(tab.title, "A1:Z1"))
+          .join("&");
+        const headerRows = await sheets(
+          "/" + state.sheetId + "/values:batchGet?" + ranges
+        );
+
+        state.vehicles = [];
+        tabs.forEach((tab, i) => {
+          const values = (headerRows.valueRanges[i].values || [[]])[0] || [];
+          const headers = values.map((h) => String(h).trim());
+          while (headers.length && headers[headers.length - 1] === "")
+            headers.pop();
+          // A tab counts as a vehicle log if its first column is a date column.
+          if (headers.length && isDateHeader(headers[0]))
+            state.vehicles.push({ ...tab, headers });
+        });
+
+        if (!state.vehicles.length) {
+          state.blankTab =
+            tabs.length === 1 && !(headerRows.valueRanges[0].values || []).length
+              ? tabs[0]
+              : null;
+          setStatus("");
+          el("subtitle").textContent = state.title;
+          show("seed");
+          el("seed-name").focus();
+          return;
+        }
+
+        const remembered = store.get(KEYS.vehicle);
+        const vehicle =
+          state.vehicles.find((v) => v.title === remembered) ||
+          state.vehicles[0];
+        show("app");
+        await selectVehicle(vehicle);
+      }
+
+      async function selectVehicle(vehicle) {
+        state.current = vehicle;
+        store.set(KEYS.vehicle, vehicle.title);
+        el("subtitle").innerHTML =
+          escapeHtml(vehicle.title) +
+          ' <span style="opacity:.6">in ' +
+          escapeHtml(state.title) +
+          "</span>";
+        renderVehicles();
+        setStatus("Loading…");
+        const data = await sheets(
+          "/" +
+            state.sheetId +
+            "/values/" +
+            range(vehicle.title, "A2:Z") +
+            "?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER"
+        );
+        state.rows = (data.values || [])
+          .map((values, i) => ({ number: i + 2, values }))
+          .filter((row) => row.values.some((v) => v !== "" && v !== null));
+        setStatus("");
+        renderForm();
+        renderEntries();
+      }
+
+      /* ------------------------------------------------------------ rendering */
+
+      function renderVehicles() {
+        const container = el("vehicles");
+        container.innerHTML = "";
+        for (const vehicle of state.vehicles) {
+          const button = document.createElement("button");
+          button.textContent = vehicle.title;
+          button.className =
+            state.current && vehicle.title === state.current.title
+              ? "selected"
+              : "";
+          button.onclick = () =>
+            selectVehicle(vehicle).catch(handleError);
+          container.appendChild(button);
+        }
+        const add = document.createElement("button");
+        add.textContent = "+ Vehicle";
+        add.onclick = () => addVehicle().catch(handleError);
+        container.appendChild(add);
+      }
+
+      // Distinct previous values for a column, most recently used first.
+      function previousValues(index) {
+        const seen = [];
+        for (let i = state.rows.length - 1; i >= 0; i--) {
+          const value = state.rows[i].values[index];
+          if (typeof value === "string" && value.trim() && !seen.includes(value))
+            seen.push(value.trim());
+        }
+        return seen;
+      }
+
+      function fieldKind(header) {
+        if (isDateHeader(header)) return "date";
+        if (/odo|mile|km|distance|cost|price|amount|spend|total/i.test(header))
+          return "number";
+        if (/note|comment|detail|descri/i.test(header)) return "text-long";
+        return "text";
+      }
+
+      function renderForm() {
+        const container = el("fields");
+        container.innerHTML = "";
+        state.current.headers.forEach((header, index) => {
+          const kind = fieldKind(header);
+          const wrapper = document.createElement("div");
+          wrapper.className = "field";
+          const id = "entry-" + index;
+
+          const label = document.createElement("label");
+          label.htmlFor = id;
+          label.textContent = header;
+          wrapper.appendChild(label);
+
+          let input;
+          if (kind === "text-long") {
+            input = document.createElement("textarea");
+          } else {
+            input = document.createElement("input");
+            input.type = kind === "date" ? "date" : "text";
+            if (kind === "number") input.inputMode = "decimal";
+          }
+          input.id = id;
+          input.dataset.index = index;
+          if (kind === "date") input.value = todayISO();
+          wrapper.appendChild(input);
+
+          if (kind === "text") {
+            const suggestions = previousValues(index).slice(0, 6);
+            if (suggestions.length) {
+              const chips = document.createElement("div");
+              chips.className = "suggestions";
+              for (const value of suggestions) {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.textContent = value;
+                chip.onclick = () => {
+                  input.value = value;
+                  input.focus();
+                };
+                chips.appendChild(chip);
+              }
+              wrapper.appendChild(chips);
+            }
+          }
+          container.appendChild(wrapper);
+        });
+      }
+
+      function renderEntries() {
+        const headers = state.current.headers;
+        const dateIndex = headers.findIndex(isDateHeader);
+        const entries = state.rows
+          .map((row) => {
+            const date =
+              dateIndex >= 0
+                ? parseDate(row.values[dateIndex], headers[dateIndex])
+                : null;
+            return { row, date, sort: date && !isNaN(date) ? date.getTime() : -1 };
+          })
+          .sort((a, b) => b.sort - a.sort);
+
+        const container = el("entries");
+        container.innerHTML = "";
+        if (!entries.length) {
+          container.innerHTML =
+            '<p class="summary">Nothing logged for this vehicle yet.</p>';
+          el("summary").textContent = "";
+          return;
+        }
+
+        for (const entry of entries) {
+          const values = entry.row.values;
+          const parts = headers
+            .map((header, i) => ({ header, value: displayValue(values[i], header) }))
+            .filter((part, i) => i !== dateIndex && part.value !== "");
+
+          // Lead with what was done, falling back to the first thing we have.
+          const lead = parts.findIndex((part) => /service|work|job|type|descri/i.test(part.header));
+          const headlinePart =
+            parts[lead >= 0 ? lead : 0] ||
+            { value: "(no details)" };
+
+          const node = document.createElement("div");
+          node.className = "entry";
+          const headline = headlinePart.value;
+          const rest = parts
+            .filter((part) => part !== headlinePart)
+            .map(
+              (part) =>
+                "<span>" +
+                escapeHtml(part.header) +
+                ": " +
+                escapeHtml(part.value) +
+                "</span>"
+            )
+            .join("");
+          node.innerHTML =
+            '<div class="when">' +
+            escapeHtml(
+              entry.date && !isNaN(entry.date) ? formatDate(entry.date) : "—"
+            ) +
+            '</div><div class="what"><div class="headline">' +
+            escapeHtml(headline) +
+            "</div>" +
+            (rest ? '<div class="detail">' + rest + "</div>" : "") +
+            "</div>";
+
+          const remove = document.createElement("button");
+          remove.className = "del";
+          remove.title = "Delete this entry";
+          remove.textContent = "✕";
+          remove.onclick = () => deleteEntry(entry.row).catch(handleError);
+          node.appendChild(remove);
+          container.appendChild(node);
+        }
+
+        const latest = entries[0];
+        const odoIndex = headers.findIndex((h) => /odo|mile|km/i.test(h));
+        const odometer = entries
+          .map((e) => e.row.values[odoIndex])
+          .find((v) => typeof v === "number");
+        el("summary").textContent =
+          entries.length +
+          (entries.length === 1 ? " entry" : " entries") +
+          (latest.date && !isNaN(latest.date)
+            ? " · last logged " + formatDate(latest.date)
+            : "") +
+          (odometer !== undefined
+            ? " · " + headers[odoIndex] + " " + odometer.toLocaleString()
+            : "");
+      }
+
+      /* -------------------------------------------------------------- writing */
+
+      async function addEntry(event) {
+        event.preventDefault();
+        const headers = state.current.headers;
+        const values = headers.map((header, index) => {
+          const input = el("entry-" + index);
+          const raw = (input.value || "").trim();
+          if (!raw) return "";
+          if (fieldKind(header) === "number") {
+            const number = Number(raw.replace(/[^0-9.-]/g, ""));
+            return isNaN(number) ? raw : number;
+          }
+          return raw;
+        });
+
+        const dateIndex = headers.findIndex(isDateHeader);
+        const details = values.filter((value, i) => i !== dateIndex && value !== "");
+        if (!details.length) {
+          setStatus("Add at least one detail before saving.", "error");
+          return;
+        }
+
+        el("save").disabled = true;
+        setStatus("Saving…");
+        try {
+          await sheets(
+            "/" +
+              state.sheetId +
+              "/values/" +
+              range(state.current.title, "A:Z") +
+              ":append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS",
+            { method: "POST", body: { values: [values] } }
+          );
+          await selectVehicle(state.current);
+          setStatus("Saved ✓", "ok");
+        } catch (error) {
+          handleError(error);
+        } finally {
+          el("save").disabled = false;
+        }
+      }
+
+      async function deleteEntry(row) {
+        const label = row.values.filter((v) => v !== "").slice(0, 2).join(" ");
+        if (!confirm("Delete this entry?\n\n" + label)) return;
+        setStatus("Deleting…");
+        await sheets("/" + state.sheetId + ":batchUpdate", {
+          method: "POST",
+          body: {
+            requests: [
+              {
+                deleteDimension: {
+                  range: {
+                    sheetId: state.current.sheetId,
+                    dimension: "ROWS",
+                    startIndex: row.number - 1,
+                    endIndex: row.number,
+                  },
+                },
+              },
+            ],
+          },
+        });
+        await selectVehicle(state.current);
+        setStatus("Deleted", "ok");
+      }
+
+      async function addField() {
+        const name = (prompt("Name of the new field") || "").trim();
+        if (!name) return;
+        const headers = state.current.headers;
+        if (headers.some((h) => h.toLowerCase() === name.toLowerCase())) {
+          setStatus("That field already exists.", "error");
+          return;
+        }
+        const cell = columnLetter(headers.length) + "1";
+        setStatus("Adding field…");
+        await sheets(
+          "/" +
+            state.sheetId +
+            "/values/" +
+            range(state.current.title, cell) +
+            "?valueInputOption=RAW",
+          { method: "PUT", body: { values: [[name]] } }
+        );
+        headers.push(name);
+        renderForm();
+        renderEntries();
+        setStatus("Added " + name, "ok");
+      }
+
+      async function writeHeaders(title, headers) {
+        await sheets(
+          "/" +
+            state.sheetId +
+            "/values/" +
+            range(title, "A1") +
+            "?valueInputOption=RAW",
+          { method: "PUT", body: { values: [headers] } }
+        );
+      }
+
+      async function createTab(title, headers) {
+        const result = await sheets("/" + state.sheetId + ":batchUpdate", {
+          method: "POST",
+          body: { requests: [{ addSheet: { properties: { title } } }] },
+        });
+        const properties = result.replies[0].addSheet.properties;
+        await writeHeaders(title, headers);
+        return { sheetId: properties.sheetId, title, headers };
+      }
+
+      async function addVehicle() {
+        const name = (prompt("Name of the vehicle") || "").trim();
+        if (!name) return;
+        if (state.vehicles.some((v) => v.title.toLowerCase() === name.toLowerCase())) {
+          setStatus("There is already a tab with that name.", "error");
+          return;
+        }
+        setStatus("Adding vehicle…");
+        // New vehicles inherit the columns already in use, so tabs stay consistent.
+        const headers = state.current
+          ? [...state.current.headers]
+          : [...DEFAULT_HEADERS];
+        const vehicle = await createTab(name, headers);
+        state.vehicles.push(vehicle);
+        await selectVehicle(vehicle);
+        setStatus("Added " + name, "ok");
+      }
+
+      async function seedSheet() {
+        const name = (el("seed-name").value || "").trim();
+        if (!name) {
+          setStatus("Give the vehicle a name first.", "error");
+          return;
+        }
+        setStatus("Setting up…");
+        try {
+          let vehicle;
+          if (state.blankTab) {
+            // Reuse the empty default tab rather than leaving "Sheet1" lying around.
+            await sheets("/" + state.sheetId + ":batchUpdate", {
+              method: "POST",
+              body: {
+                requests: [
+                  {
+                    updateSheetProperties: {
+                      properties: { sheetId: state.blankTab.sheetId, title: name },
+                      fields: "title",
+                    },
+                  },
+                ],
+              },
+            });
+            await writeHeaders(name, DEFAULT_HEADERS);
+            vehicle = {
+              sheetId: state.blankTab.sheetId,
+              title: name,
+              headers: [...DEFAULT_HEADERS],
+            };
+          } else {
+            vehicle = await createTab(name, [...DEFAULT_HEADERS]);
+          }
+          state.vehicles = [vehicle];
+          show("app");
+          await selectVehicle(vehicle);
+          setStatus("Sheet is ready — add your first entry.", "ok");
+        } catch (error) {
+          handleError(error);
+        }
+      }
+
+      async function createSpreadsheet() {
+        const clientId = el("client-id").value.trim();
+        if (!clientId) {
+          setStatus("Add your Google client ID first.", "error");
+          return;
+        }
+        state.clientId = clientId;
+        store.set(KEYS.clientId, clientId);
+        setStatus("Creating spreadsheet…");
+        try {
+          await signIn();
+          const created = await sheets("", {
+            method: "POST",
+            body: { properties: { title: "Car Servicing" } },
+          });
+          state.sheetId = created.spreadsheetId;
+          store.set(KEYS.sheetId, state.sheetId);
+          el("sheet-id").value = created.spreadsheetUrl;
+          await loadSpreadsheet();
+        } catch (error) {
+          handleError(error);
+        }
+      }
+
+      /* ------------------------------------------------------------ connecting */
+
+      function extractSheetId(value) {
+        const match = value.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+        return match ? match[1] : value.trim();
+      }
+
+      async function connect() {
+        const clientId = el("client-id").value.trim();
+        const sheetId = extractSheetId(el("sheet-id").value);
+        if (!clientId || !sheetId) {
+          setStatus("Both the client ID and a sheet are needed.", "error");
+          return;
+        }
+        if (sheetId !== state.sheetId) store.del(KEYS.vehicle);
+        state.clientId = clientId;
+        state.sheetId = sheetId;
+        store.set(KEYS.clientId, clientId);
+        store.set(KEYS.sheetId, sheetId);
+        setStatus("Connecting…");
+        try {
+          await signIn();
+          await loadSpreadsheet();
+        } catch (error) {
+          handleError(error);
+        }
+      }
+
+      function changeSheet() {
+        show("setup");
+        setStatus("");
+        el("subtitle").textContent =
+          "Keep a record of what was done to the car, and when.";
+        el("client-id").value = state.clientId || store.get(KEYS.clientId);
+        el("sheet-id").value = state.sheetId || store.get(KEYS.sheetId);
+      }
+
+      /* ------------------------------------------------------------------ init */
+
+      el("connect").onclick = connect;
+      el("create-sheet").onclick = createSpreadsheet;
+      el("seed-button").onclick = () => seedSheet();
+      el("seed-change").onclick = changeSheet;
+      el("change-sheet").onclick = changeSheet;
+      el("signin-change").onclick = changeSheet;
+      el("entry-form").onsubmit = addEntry;
+      el("add-field").onclick = () => addField().catch(handleError);
+      el("signin-button").onclick = async () => {
+        setStatus("Connecting…");
+        try {
+          await signIn();
+          await loadSpreadsheet();
+        } catch (error) {
+          handleError(error);
+        }
+      };
+      el("sign-out").onclick = () => {
+        signOut();
+        setStatus("Signed out.");
+        show("signin");
+      };
+      el("seed-name").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          seedSheet();
+        }
+      });
+
+      (function start() {
+        state.clientId = store.get(KEYS.clientId);
+        state.sheetId = store.get(KEYS.sheetId);
+        el("client-id").value = state.clientId;
+        el("sheet-id").value = state.sheetId;
+        if (!state.clientId || !state.sheetId) {
+          show("setup");
+          return;
+        }
+        el("footer").hidden = false;
+        el("open-sheet").href =
+          "https://docs.google.com/spreadsheets/d/" + state.sheetId + "/edit";
+        // A token from earlier in this browser session avoids a sign-in round trip.
+        if (storedToken()) {
+          show("app");
+          loadSpreadsheet().catch(handleError);
+        } else {
+          show("signin");
+        }
+      })();
+    </script>
+  </body>
+</html>
