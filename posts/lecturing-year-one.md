@@ -14,6 +14,8 @@ I have split the post into the following:
 5. [Mentoring](#mentoring)
 6. [Final Thoughts](#final-thoughts)
 
+**If you are a prospective student in computing in Ireland with a disposition for project-based learning and creativity, and you enjoyed reading this, take a look at [Creative Computing at IADT](https://iadt.ie/courses/creative-computing/). I teach on it (for better or for worse), and I think that it provides an excellent combination of the fundamentals of a computing degree, viewed through the lens of one of Ireland's best-known creative colleges.**
+
 ## Background
 
 Some quick background on the job. My official job title is “Assistant Lecturer in Computing”. The job can be split into four parts: teaching, student supervision, research and practice, and administration. For me, alongside teaching and supervising students, I am also a year tutor for second years for the course I teach on.
